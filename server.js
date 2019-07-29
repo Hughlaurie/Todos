@@ -4,34 +4,82 @@ const port = 3001
 const bodyParser = require('body-parser')
 const cors = require('cors')
 
-var todos = [
-  {id: 1, text: "Learn JavaScript", done: false},
-  {id: 2, text: "Learn Vue", done: false},
-  {id: 3, text: "Play around in JSFiddle", done: false},
-  {id: 4, text: "Build something awesome", done: true},
-]
+const Sequelize = require('sequelize'); //Подключаем библиотеку
+const Model = Sequelize.Model;
+const config =  {
+  username: 'postgres',
+  password: 111111, 
+  database: 'postgres', // Имя базы данных
+  host: '127.0.0.1', // Адрес субд, для postreSQL всегда локалхост
+  dialect: 'postgres',
+  } // Говорим, какую СУБД будем юзать
+ /* dialectOptions: {
+    multipleStatements: true
+  },
+  logging: console.log, // Включаем логи запросов, нужно передать именно функцию, либо false
+  storage: './test_db.db', // Путь к файлу БД
+  operatorsAliases: Sequelize.Op // Передаём алиасы параметров (дальше покажу нафига)
+}*/
+let sequelize = new Sequelize(config); // Создаём подключение
 
-var id = todos.length + 1;
+//тест подключения
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log('Connection has been established successfully.');
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
+
+//описываем модель данных
+let Todos = sequelize.define('todos', {
+  id: {
+    allowNull: false,
+    autoIncrement: true,
+    primaryKey: true,
+    type: Sequelize.DataTypes.INTEGER
+  },
+  text: {
+    type: Sequelize.DataTypes.STRING,
+    allowNull: false
+  },
+  done: {
+    type: Sequelize.DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  }
+});
+
+/*let todo = {
+    text: 'Java Learn',
+    done: false
+  }
+Todos.create(todo); 
+sequelize.sync();*/ 
+
+
+//var id = todos.length + 1;
+Todos.destroy;
 
 app.use(cors());
 app.use (bodyParser.json())
 
 
 
-app.get('/todos', (request, response) => {
-  response.send(todos);
+app.get('/todos', async (request, response) => {
+    await Todos.findAll().then(dbTodo => {
+    response.send(dbTodo);
+  })
 })
 
-app.post('/todos', (request, response) => {
+app.post('/todos', async (request, response) => {
   let todo = request.body
-  todo.id = id++;
-  for (let i = 0; i < todos.length; i++) {
-    if (todo.text == todos[i].text) {
-      response.status(400).send({ error: 'Duplicate name!' });
-      return;
-    }
-  }
-  todos.push(todo)
+  let sameTodo = await Todos.findAll(
+    {where: {text: todo.text}
+  })
+  if (sameTodo.length > 0) { return} 
+  Todos.create(todo)
   response.send(todo)
 })
 
