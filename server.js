@@ -30,7 +30,7 @@ app.post('/todos', async (request, response) => {
   let sameTodo = await db.Todos.findAll(
     {where: {text: todo.text}
   })
-  if (sameTodo.length > 0) { return} 
+  if (sameTodo.length > 0) {return} 
   db.Todos.create(todo)
   response.send(todo)
 })
@@ -41,16 +41,27 @@ app.delete('/todos/:id', async (request, response) => {
     {where: {id: request.params.id}
   })
   db.Todos.remove(todo);
-  response.send(todos); 
+  response.send(todo); 
 }) 
-//delete all
+//delete all (notwork)
 app.delete('/todos', (request, response) => {
   todos = todos.filter(todo => !todo.done)
   response.send(todos);
 })    
- //toggle   
-app.put('/todos/:id', (request, response) => {
-  for (let i = 0; i < todos.length; i++) {
+ //toggle  
+app.put('/todos/:id', async (request, response) => {
+  let todo = await db.Todos.findOne({
+    where: {id: request.params.id}
+  })
+  if (todo) { 
+    await db.Todos.update(request.body, {
+      where: {id: request.params.id}
+    });
+  }
+  response.send(request.params.id);
+})
+
+/* for (let i = 0; i < todos.length; i++) {
     if (todos[i].id == request.params.id) {
       todos[i] = request.body;
       response.send(todos[i]);
@@ -60,9 +71,8 @@ app.put('/todos/:id', (request, response) => {
       todos[i].text =todo[i].text;
       todos[i].edit = false;
     }*/
-  }
-  response.status(404).send({ error: `Not found todo with id: ${request.params.id}.` });
-})
+/*response.status(404).send({ error: `Not found todo with id: ${request.params.id}.` });
+})*/
 
 app.listen(port, (err) => {
   if (err) {
