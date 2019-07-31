@@ -37,11 +37,11 @@ app.post('/todos', async (request, response) => {
 
 //delete data
 app.delete('/todos/:id', async (request, response) => {
-  let todo = await db.Todos.findAll(
+  await db.Todos.destroy(
     {where: {id: request.params.id}
   })
-  db.Todos.remove(todo);
-  response.send(todo); 
+
+  response.send(request.params.id); 
 }) 
 //delete all (notwork)
 app.delete('/todos', (request, response) => {
